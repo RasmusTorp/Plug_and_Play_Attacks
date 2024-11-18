@@ -5,10 +5,10 @@ import numpy as np
 import torch.optim as optim
 import torchvision.transforms as T
 import yaml
-from models.classifier import Classifier
 from rtpt.rtpt import RTPT
 from torchvision.datasets import *
 
+from plug_and_play_attacks.models.classifier import Classifier
 from plug_and_play_attacks.datasets.celeba import CelebA1000
 from plug_and_play_attacks.datasets.custom_subset import Subset
 from plug_and_play_attacks.datasets.facescrub import FaceScrub

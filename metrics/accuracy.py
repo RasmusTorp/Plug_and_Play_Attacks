@@ -1,6 +1,6 @@
 import torch
 
-from metrics.base_metric import BaseMetric
+from  plug_and_play_attacks.metrics.base_metric import BaseMetric
 
 
 class Accuracy(BaseMetric):

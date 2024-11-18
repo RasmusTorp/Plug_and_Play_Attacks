@@ -3,9 +3,9 @@ import math
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import TensorDataset
-from utils.stylegan import create_image
 
-from metrics.accuracy import Accuracy, AccuracyTopK
+from plug_and_play_attacks.utils.stylegan import create_image
+from plug_and_play_attacks.metrics.accuracy import Accuracy, AccuracyTopK
 
 
 class ClassificationAccuracy():

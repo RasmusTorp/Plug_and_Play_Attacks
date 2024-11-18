@@ -1,0 +1,38 @@
+name: plug_and_play
+stylegan_model: stylegan2-ada-pytorch/ffhq.pkl
+evaluation_model: {architecture: inception-v3, weights: trained_models/facescrub/inception_v3_facescrub.pt,
+  num_classes: 10}
+candidates:
+  num_candidates: 200
+  candidate_search: {search_space_size: 2000, center_crop: null, resize: 224, horizontal_flip: true,
+    batch_size: 25, truncation_psi: 0.5, truncation_cutoff: 8}
+attack:
+  batch_size: 25
+  num_epochs: 50
+  targets: 0
+  discriminator_loss_weight: 0.0
+  single_w: true
+  clip: false
+  transformations:
+    CenterCrop: {size: 800}
+    Resize: {size: 224, antialias: true}
+    RandomResizedCrop:
+      size: [224, 224]
+      scale: [0.9, 1.0]
+      ratio: [1.0, 1.0]
+      antialias: true
+  optimizer:
+    Adam:
+      lr: 0.005
+      weight_decay: 0
+      betas: [0.1, 0.1]
+  lr_scheduler:
+    MultiStepLR:
+      milestones: [30, 40]
+      gamma: 0.1
+final_selection: {samples_per_target: 50, approach: transforms, iterations: 100}
+wandb:
+  enable_logging: false
+  wandb_init_args: {project: plug_and_play, save_code: true}
+dataset: MNIST
+seed: 42

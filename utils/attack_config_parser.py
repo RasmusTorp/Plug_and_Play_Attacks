@@ -7,13 +7,11 @@ import torch.optim as optim
 import torchvision.transforms as T
 import yaml
 from matplotlib.pyplot import fill
+import wandb
 
 from plug_and_play_attacks.attacks.initial_selection import find_initial_w
-
 from plug_and_play_attacks.models.classifier import Classifier
-
-import wandb
-from utils.wandb import load_model
+from plug_and_play_attacks.utils.wandb import load_model
 
 
 class AttackConfigParser:

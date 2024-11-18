@@ -8,13 +8,13 @@ import timm
 import torch
 import torch.nn as nn
 import wandb
-from metrics.accuracy import Accuracy
 from torch.utils.data import DataLoader
 from torchvision.models import densenet, inception, resnet
 from torchvision.transforms import (ColorJitter, RandomCrop,
                                     RandomHorizontalFlip, Resize)
 from tqdm import tqdm
 
+from plug_and_play_attacks.metrics.accuracy import Accuracy
 from plug_and_play_attacks.models.base_model import BaseModel
 
 
