@@ -15,7 +15,7 @@ from torchvision.transforms import (ColorJitter, RandomCrop,
                                     RandomHorizontalFlip, Resize)
 from tqdm import tqdm
 
-from models.base_model import BaseModel
+from plug_and_play_attacks.models.base_model import BaseModel
 
 
 class Classifier(BaseModel):

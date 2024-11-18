@@ -1,13 +1,17 @@
 import torch
 import torchvision.transforms as T
-from datasets.celeba import CelebA1000
-from datasets.custom_subset import SingleClassSubset
-from datasets.facescrub import FaceScrub
-from datasets.stanford_dogs import StanfordDogs
+
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import TensorDataset
 from torchvision.transforms.transforms import Resize
-from utils.stylegan import create_image
+
+from plug_and_play_attacks.utils.stylegan import create_image
+
+from plug_and_play_attacks.datasets.celeba import CelebA1000
+from plug_and_play_attacks.datasets.custom_subset import SingleClassSubset
+from plug_and_play_attacks.datasets.facescrub import FaceScrub
+from plug_and_play_attacks.datasets.stanford_dogs import StanfordDogs
+
 
 
 class DistanceEvaluation():

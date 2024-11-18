@@ -15,17 +15,17 @@ from facenet_pytorch import InceptionResnetV1
 from rtpt import RTPT
 from torch.utils.data import TensorDataset
 
-from attacks.final_selection import perform_final_selection
-from attacks.optimize import Optimization
-from datasets.custom_subset import ClassSubset
-from metrics.classification_acc import ClassificationAccuracy
-from metrics.fid_score import FID_Score
-from metrics.prcd import PRCD
-from utils.attack_config_parser import AttackConfigParser
-from utils.datasets import (create_target_dataset, get_facescrub_idx_to_class,
+from plug_and_play_attacks.attacks.final_selection import perform_final_selection
+from plug_and_play_attacks.attacks.optimize import Optimization
+from plug_and_play_attacks.datasets.custom_subset import ClassSubset
+from plug_and_play_attacks.metrics.classification_acc import ClassificationAccuracy
+from plug_and_play_attacks.metrics.fid_score import FID_Score
+from plug_and_play_attacks.metrics.prcd import PRCD
+from plug_and_play_attacks.utils.attack_config_parser import AttackConfigParser
+from plug_and_play_attacks.utils.datasets import (create_target_dataset, get_facescrub_idx_to_class,
                             get_stanford_dogs_idx_to_class)
-from utils.stylegan import create_image, load_discrimator, load_generator
-from utils.wandb import *
+from plug_and_play_attacks.utils.stylegan import create_image, load_discrimator, load_generator
+from plug_and_play_attacks.utils.wandb import *
 
 
 def main():
@@ -494,7 +494,7 @@ def parse_arguments(parser):
     return config, args
 
 
-def create_initial_vectors(config, G, target_model, targets, device):
+def  create_initial_vectors(config, G, target_model, targets, device):
     with torch.no_grad():
         w = config.create_candidates(G, target_model, targets).cpu()
         if config.attack['single_w']:

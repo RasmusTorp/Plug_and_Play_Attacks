@@ -6,9 +6,11 @@ import torch
 import torch.optim as optim
 import torchvision.transforms as T
 import yaml
-from attacks.initial_selection import find_initial_w
 from matplotlib.pyplot import fill
-from models.classifier import Classifier
+
+from plug_and_play_attacks.attacks.initial_selection import find_initial_w
+
+from plug_and_play_attacks.models.classifier import Classifier
 
 import wandb
 from utils.wandb import load_model

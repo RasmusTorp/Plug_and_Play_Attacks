@@ -3,16 +3,18 @@ import argparse
 import torch
 import torchvision.transforms as T
 from rtpt import RTPT
-from models.classifier import Classifier
-from metrics.accuracy import Accuracy
-
 from tqdm import tqdm
 
-from datasets.attack_latents import AttackLatents
-from datasets.custom_subset import ClassSubset
-from datasets.facescrub import FaceScrub
-from datasets.celeba import CelebA1000
-from utils.stylegan import load_generator
+from plug_and_play_attacks.models.classifier import Classifier
+from plug_and_play_attacks.metrics.accuracy import Accuracy
+
+
+
+from plug_and_play_attacks.datasets.attack_latents import AttackLatents
+from plug_and_play_attacks.datasets.custom_subset import ClassSubset
+from plug_and_play_attacks.datasets.facescrub import FaceScrub
+from plug_and_play_attacks.datasets.celeba import CelebA1000
+from plug_and_play_attacks.utils.stylegan import load_generator
 import wandb
 
 

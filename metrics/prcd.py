@@ -5,8 +5,8 @@ import torch
 from pytorch_fid.inception import InceptionV3
 
 sys.path.insert(0, '/workspace')
-from datasets.custom_subset import SingleClassSubset
-from utils.stylegan import create_image
+from plug_and_play_attacks.datasets.custom_subset import SingleClassSubset
+from plug_and_play_attacks.utils.stylegan import create_image
 
 
 class PRCD:

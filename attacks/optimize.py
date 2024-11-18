@@ -1,9 +1,9 @@
-from losses.poincare import poincare_loss
 import math
-
 import numpy as np
 import torch
 import torch.nn as nn
+
+from plug_and_play_attacks.losses.poincare import poincare_loss
 
 class Optimization():
     def __init__(self, target_model, synthesis, discriminator, transformations, num_ws, config):
