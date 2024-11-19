@@ -39,6 +39,7 @@ def find_initial_w(generator,
         torch.tensor: style vectors with highest confidences on the target model and target class.
     """
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    target_model.to(device)
     z = torch.from_numpy(
         np.random.RandomState(seed).randn(search_space_size,
                                           generator.z_dim)).to(device)
@@ -60,7 +61,8 @@ def find_initial_w(generator,
                       desc='Find initial style vector w'):
             imgs = generator.synthesis(w[0],
                                        noise_mode='const',
-                                       force_fp32=True)
+                                       force_fp32=True,
+                                       )
             # Adjust images and perform augmentation
             if clip:
                 lower_bound = torch.tensor(-1.0).float().to(imgs.device)

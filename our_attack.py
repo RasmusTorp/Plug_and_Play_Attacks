@@ -63,8 +63,11 @@ def attack(config, target_dataset, target_model, evaluation_model):
         idx_to_class = KeyDict()
 
     # Load pre-trained StyleGan2 components #! Missing gpu atm
-    G = load_generator(config.stylegan_model)
-    D = load_discrimator(config.stylegan_model)
+    G = load_generator(config.stylegan_model, device)
+    D = load_discrimator(config.stylegan_model, device)
+    
+    G.img_channels = target_dataset[0][0].shape[0] # Extracting the number of channels from the dataset
+    
     num_ws = G.num_ws
 
     # target_dataset = config.get_target_dataset()
@@ -80,7 +83,7 @@ def attack(config, target_dataset, target_model, evaluation_model):
     # Load basic attack parameters
     num_epochs = config.attack['num_epochs']
     batch_size_single = config.attack['batch_size']
-    batch_size = config.attack['batch_size'] * torch.cuda.device_count()
+    batch_size = config.attack['batch_size'] * max(torch.cuda.device_count(), 1) #! Changed this to max(n, 1) to make it work with cpu.
     targets = config.create_target_vector()
 
     # Create initial style vectors
@@ -91,8 +94,7 @@ def attack(config, target_dataset, target_model, evaluation_model):
     # Initialize wandb logging
     if config.logging:
         optimizer = config.create_optimizer(params=[w])
-        wandb_run = init_wandb_logging(optimizer, target_model_name, config,
-                                       args) #! TODO: Update logging (args is not defined)
+        wandb_run = init_wandb_logging(optimizer, target_model_name, config) #! TODO: Update logging (args is not defined)
         run_id = wandb_run.id
 
     # Print attack configuration
@@ -108,15 +110,15 @@ def attack(config, target_dataset, target_model, evaluation_model):
 
     # Initialize RTPT
     rtpt = None
-    if args.rtpt:
-        max_iterations = math.ceil(w.shape[0] / batch_size) \
-            + int(math.ceil(w.shape[0] / (batch_size * 3))) \
-            + 2 * int(math.ceil(config.final_selection['samples_per_target'] * len(set(targets.cpu().tolist())) / (batch_size * 3))) \
-            + 2 * len(set(targets.cpu().tolist()))
-        rtpt = RTPT(name_initials='LS',
-                    experiment_name='Model_Inversion',
-                    max_iterations=max_iterations)
-        rtpt.start()
+    # if args.rtpt: #! TODO: Maybe worth enabling as an option
+    #     max_iterations = math.ceil(w.shape[0] / batch_size) \
+    #         + int(math.ceil(w.shape[0] / (batch_size * 3))) \
+    #         + 2 * int(math.ceil(config.final_selection['samples_per_target'] * len(set(targets.cpu().tolist())) / (batch_size * 3))) \
+    #         + 2 * len(set(targets.cpu().tolist()))
+    #     rtpt = RTPT(name_initials='LS',
+    #                 experiment_name='Model_Inversion',
+    #                 max_iterations=max_iterations)
+    #     rtpt.start()
 
     # Log initial vectors
     if config.logging:
@@ -485,19 +487,19 @@ def create_parser():
     return parser
 
 
-def parse_arguments(parser):
-    args = parser.parse_args()
+# def parse_arguments(parser):
+#     args = parser.parse_args()
 
-    if not args.config:
-        print(
-            "Configuration file is missing. Please check the provided path. Execution is stopped."
-        )
-        exit()
+#     if not args.config:
+#         print(
+#             "Configuration file is missing. Please check the provided path. Execution is stopped."
+#         )
+#         exit()
 
-    # Load attack config
-    config = AttackConfigParser(args.config)
+#     # Load attack config
+#     config = AttackConfigParser(args.config)
 
-    return config, args
+#     return config, args
 
 
 def  create_initial_vectors(config, G, target_model, targets, device):
@@ -553,7 +555,7 @@ def log_attack_progress(loss,
         })
 
 
-def init_wandb_logging(optimizer, target_model_name, config, args):
+def init_wandb_logging(optimizer, target_model_name, config):
     lr = optimizer.param_groups[0]['lr']
     optimizer_name = type(optimizer).__name__
     if not 'name' in config.wandb['wandb_init_args']:
@@ -561,7 +563,7 @@ def init_wandb_logging(optimizer, target_model_name, config, args):
             'name'] = f'{optimizer_name}_{lr}_{target_model_name}'
     wandb_config = config.create_wandb_config()
     run = wandb.init(config=wandb_config, **config.wandb['wandb_init_args'])
-    wandb.save(args.config)
+    # wandb.save(args.config)
     return run
 
 
