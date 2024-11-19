@@ -75,7 +75,7 @@ def create_image(w,
         return imgs
 
 
-def load_generator(filepath):
+def load_generator(filepath, device):
     """Load pre-trained generator using the running average of the weights ('ema').
 
     Args:
@@ -86,11 +86,11 @@ def load_generator(filepath):
     """
     with open(filepath, 'rb') as f:
         sys.path.insert(0, 'stylegan2-ada-pytorch')
-        G = pickle.load(f)['G_ema'].cuda()
+        G = pickle.load(f)['G_ema'].to(device)
     return G
 
 
-def load_discrimator(filepath):
+def load_discrimator(filepath, device):
     """Load pre-trained discriminator
 
     Args:
@@ -101,5 +101,5 @@ def load_discrimator(filepath):
     """
     with open(filepath, 'rb') as f:
         sys.path.insert(0, 'stylegan2-ada-pytorch')
-        D = pickle.load(f)['D'].cuda()
+        D = pickle.load(f)['D'].to(device)
     return D
