@@ -141,8 +141,8 @@ def attack(config, target_dataset, target_model, evaluation_model):
 
     # Prepare batches for attack
     for i in range(math.ceil(w.shape[0] / batch_size)):
-        w_batch = w[i * batch_size:(i + 1) * batch_size].cuda()
-        targets_batch = targets[i * batch_size:(i + 1) * batch_size].cuda()
+        w_batch = w[i * batch_size:(i + 1) * batch_size].to(device)
+        targets_batch = targets[i * batch_size:(i + 1) * batch_size].to(device)
         print(
             f'\nOptimizing batch {i+1} of {math.ceil(w.shape[0] / batch_size)} targeting classes {set(targets_batch.cpu().tolist())}.'
         )
