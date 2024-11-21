@@ -9,9 +9,9 @@ from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
 
-from plug_and_play_attacks.datasets.celeba import CelebA1000
-from plug_and_play_attacks.datasets.facescrub import FaceScrub
-from plug_and_play_attacks.datasets.stanford_dogs import StanfordDogs
+from Plug_and_Play_Attacks.datasets.celeba import CelebA1000
+from Plug_and_Play_Attacks.datasets.facescrub import FaceScrub
+from Plug_and_Play_Attacks.datasets.stanford_dogs import StanfordDogs
 
 
 def get_normalization():

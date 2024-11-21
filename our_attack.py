@@ -15,17 +15,17 @@ from facenet_pytorch import InceptionResnetV1
 from rtpt import RTPT
 from torch.utils.data import TensorDataset
 
-from plug_and_play_attacks.attacks.final_selection import perform_final_selection
-from plug_and_play_attacks.attacks.optimize import Optimization
-from plug_and_play_attacks.datasets.custom_subset import ClassSubset
-from plug_and_play_attacks.metrics.classification_acc import ClassificationAccuracy
-from plug_and_play_attacks.metrics.fid_score import FID_Score
-from plug_and_play_attacks.metrics.prcd import PRCD
-from plug_and_play_attacks.utils.attack_config_parser import AttackConfigParser
-from plug_and_play_attacks.utils.datasets import (create_target_dataset, get_facescrub_idx_to_class,
+from Plug_and_Play_Attacks.attacks.final_selection import perform_final_selection
+from Plug_and_Play_Attacks.attacks.optimize import Optimization
+from Plug_and_Play_Attacks.datasets.custom_subset import ClassSubset
+from Plug_and_Play_Attacks.metrics.classification_acc import ClassificationAccuracy
+from Plug_and_Play_Attacks.metrics.fid_score import FID_Score
+from Plug_and_Play_Attacks.metrics.prcd import PRCD
+from Plug_and_Play_Attacks.utils.attack_config_parser import AttackConfigParser
+from Plug_and_Play_Attacks.utils.datasets import (create_target_dataset, get_facescrub_idx_to_class,
                             get_stanford_dogs_idx_to_class)
-from plug_and_play_attacks.utils.stylegan import create_image, load_discrimator, load_generator
-from plug_and_play_attacks.utils.wandb import *
+from Plug_and_Play_Attacks.utils.stylegan import create_image, load_discrimator, load_generator
+from Plug_and_Play_Attacks.utils.wandb import *
 
 
 def attack(config, target_dataset, target_model, evaluation_model):

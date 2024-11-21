@@ -14,8 +14,8 @@ from torchvision.transforms import (ColorJitter, RandomCrop,
                                     RandomHorizontalFlip, Resize)
 from tqdm import tqdm
 
-from plug_and_play_attacks.metrics.accuracy import Accuracy
-from plug_and_play_attacks.models.base_model import BaseModel
+from Plug_and_Play_Attacks.metrics.accuracy import Accuracy
+from Plug_and_Play_Attacks.models.base_model import BaseModel
 
 
 class Classifier(BaseModel):

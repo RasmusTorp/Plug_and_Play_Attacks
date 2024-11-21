@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 from torch.utils.data import TensorDataset, DataLoader
 
-from plug_and_play_attacks.utils.stylegan import create_image
+from Plug_and_Play_Attacks.utils.stylegan import create_image
 
 def scores_by_transform(imgs,
                         targets,

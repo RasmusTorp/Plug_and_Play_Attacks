@@ -3,7 +3,7 @@ import torch
 import torchvision.transforms.functional as F
 from tqdm import tqdm
  
-from plug_and_play_attacks.utils.stylegan import adjust_gen_images
+from Plug_and_Play_Attacks.utils.stylegan import adjust_gen_images
 
 
 def find_initial_w(generator,

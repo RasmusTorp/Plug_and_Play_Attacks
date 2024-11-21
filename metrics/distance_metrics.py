@@ -5,12 +5,12 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import TensorDataset
 from torchvision.transforms.transforms import Resize
 
-from plug_and_play_attacks.utils.stylegan import create_image
+from Plug_and_Play_Attacks.utils.stylegan import create_image
 
-from plug_and_play_attacks.datasets.celeba import CelebA1000
-from plug_and_play_attacks.datasets.custom_subset import SingleClassSubset
-from plug_and_play_attacks.datasets.facescrub import FaceScrub
-from plug_and_play_attacks.datasets.stanford_dogs import StanfordDogs
+from Plug_and_Play_Attacks.datasets.celeba import CelebA1000
+from Plug_and_Play_Attacks.datasets.custom_subset import SingleClassSubset
+from Plug_and_Play_Attacks.datasets.facescrub import FaceScrub
+from Plug_and_Play_Attacks.datasets.stanford_dogs import StanfordDogs
 
 
 

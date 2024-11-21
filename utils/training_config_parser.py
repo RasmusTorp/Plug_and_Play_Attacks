@@ -8,12 +8,12 @@ import yaml
 from rtpt.rtpt import RTPT
 from torchvision.datasets import *
 
-from plug_and_play_attacks.models.classifier import Classifier
-from plug_and_play_attacks.datasets.celeba import CelebA1000
-from plug_and_play_attacks.datasets.custom_subset import Subset
-from plug_and_play_attacks.datasets.facescrub import FaceScrub
-from plug_and_play_attacks.datasets.stanford_dogs import StanfordDogs
-from plug_and_play_attacks.utils.datasets import get_normalization
+from Plug_and_Play_Attacks.models.classifier import Classifier
+from Plug_and_Play_Attacks.datasets.celeba import CelebA1000
+from Plug_and_Play_Attacks.datasets.custom_subset import Subset
+from Plug_and_Play_Attacks.datasets.facescrub import FaceScrub
+from Plug_and_Play_Attacks.datasets.stanford_dogs import StanfordDogs
+from Plug_and_Play_Attacks.utils.datasets import get_normalization
 
 
 class TrainingConfigParser:

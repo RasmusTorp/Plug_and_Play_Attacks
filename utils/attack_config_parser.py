@@ -9,9 +9,9 @@ import yaml
 from matplotlib.pyplot import fill
 import wandb
 
-from plug_and_play_attacks.attacks.initial_selection import find_initial_w
-from plug_and_play_attacks.models.classifier import Classifier
-from plug_and_play_attacks.utils.wandb import load_model
+from Plug_and_Play_Attacks.attacks.initial_selection import find_initial_w
+from Plug_and_Play_Attacks.models.classifier import Classifier
+from Plug_and_Play_Attacks.utils.wandb import load_model
 
 
 class AttackConfigParser:

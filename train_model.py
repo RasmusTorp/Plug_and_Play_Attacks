@@ -5,9 +5,9 @@ from copy import copy
 
 import torch
 
-from plug_and_play_attacks.metrics.accuracy import Accuracy
-from plug_and_play_attacks.utils.training_config_parser import TrainingConfigParser
-from plug_and_play_attacks.losses import label_smoothing
+from Plug_and_Play_Attacks.metrics.accuracy import Accuracy
+from Plug_and_Play_Attacks.utils.training_config_parser import TrainingConfigParser
+from Plug_and_Play_Attacks.losses import label_smoothing
 
 def main():
     # Define and parse arguments
