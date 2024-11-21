@@ -3,12 +3,12 @@ stylegan_model: stylegan2-ada-pytorch/ffhq.pkl
 evaluation_model: {architecture: inception-v3, weights: trained_models/facescrub/inception_v3_facescrub.pt,
   num_classes: 10}
 candidates:
-  num_candidates: 200
-  candidate_search: {search_space_size: 2000, center_crop: null, resize: 224, horizontal_flip: true,
-    batch_size: 25, truncation_psi: 0.5, truncation_cutoff: 8}
+  num_candidates: 10
+  candidate_search: {search_space_size: 2000, center_crop: null, horizontal_flip: true,
+    batch_size: 25, truncation_psi: 0.5, truncation_cutoff: 8, resize: 32}
 attack:
-  batch_size: 25
-  num_epochs: 50
+  batch_size: 1
+  num_epochs: 10
   targets: 0
   discriminator_loss_weight: 0.0
   single_w: true
