@@ -48,13 +48,13 @@ def get_subsampled_dataset(dataset,
 
 
 def get_facescrub_idx_to_class():
-    with open('utils/files/facescrub_idx_to_class.pkl', 'rb') as f:
+    with open('Plug_and_Play_Attacks/utils/files/facescrub_idx_to_class.pkl', 'rb') as f:
         idx_to_class = pickle.load(f)
     return idx_to_class
 
 
 def get_facescrub_class_to_idx():
-    with open('utils/files/facescrub_class_to_idx.pkl', 'rb') as f:
+    with open('Plug_and_Play_Attacks/utils/files/facescrub_class_to_idx.pkl', 'rb') as f:
         class_to_idx = pickle.load(f)
     return class_to_idx
 
