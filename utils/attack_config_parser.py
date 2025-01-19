@@ -137,6 +137,7 @@ class AttackConfigParser:
             men_idxs = random.sample(range(0, 264), num_men)
             women_idxs = random.sample(range(265, 529), num_women)
             targets = torch.tensor(men_idxs + women_idxs)
+            print(f"Targets for {target_classes}: {targets}")
             targets = torch.repeat_interleave(targets, num_candidates)
         elif target_classes == 'all':
             targets = torch.tensor([i for i in range(self.model.num_classes)])
