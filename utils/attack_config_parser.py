@@ -2,6 +2,7 @@ from copy import copy
 from typing import List
 
 import numpy as np
+import random
 import torch
 import torch.optim as optim
 import torchvision.transforms as T
@@ -126,6 +127,16 @@ class AttackConfigParser:
         num_candidates = self._config['candidates']['num_candidates']
         if type(target_classes) is list:
             targets = torch.tensor(target_classes)
+            targets = torch.repeat_interleave(targets, num_candidates)
+        elif 'FS-' in target_classes: # ex 'FS-75', you would take a random 38 men and 37 women using FaceScrub indices
+            #! only works with FaceScrub, maybe add assert statement?
+            num_target_classes = int(target_classes.split('-')[-1])
+            num_men = num_target_classes // 2
+            num_women = num_target_classes - num_men
+            random.seed(attack_config.training.seed)
+            men_idxs = random.sample(range(0, 264), num_men)
+            women_idxs = random.sample(range(265, 529), num_women)
+            targets = torch.tensor(men_idxs + women_idxs)
             targets = torch.repeat_interleave(targets, num_candidates)
         elif target_classes == 'all':
             targets = torch.tensor([i for i in range(self.model.num_classes)])
