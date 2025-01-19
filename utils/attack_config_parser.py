@@ -133,7 +133,7 @@ class AttackConfigParser:
             num_target_classes = int(target_classes.split('-')[-1])
             num_men = num_target_classes // 2
             num_women = num_target_classes - num_men
-            random.seed(attack_config.training.seed)
+            random.seed(self._config['seed'])
             men_idxs = random.sample(range(0, 264), num_men)
             women_idxs = random.sample(range(265, 529), num_women)
             targets = torch.tensor(men_idxs + women_idxs)
