@@ -128,7 +128,7 @@ class AttackConfigParser:
         if type(target_classes) is list:
             targets = torch.tensor(target_classes)
             targets = torch.repeat_interleave(targets, num_candidates)
-        elif isinstance(target_classes, str) and 'FS-' in target_classes: # ex 'FS-75', you would take a random 38 men and 37 women using FaceScrub indices
+        elif isinstance(target_classes, str) and 'FS-' in target_classes: # ex 'FS-75', you would take a random 37 men and 38 women using FaceScrub indices
             #! only works with FaceScrub, maybe add assert statement?
             num_target_classes = int(target_classes.split('-')[-1])
             num_men = num_target_classes // 2
@@ -137,7 +137,7 @@ class AttackConfigParser:
             men_idxs = random.sample(range(0, 264), num_men)
             women_idxs = random.sample(range(265, 529), num_women)
             targets = torch.tensor(men_idxs + women_idxs)
-            print(f"Targets for {target_classes}: {targets}")
+            # print(f"Targets for {target_classes}: {targets}")
             targets = torch.repeat_interleave(targets, num_candidates)
         elif target_classes == 'all':
             targets = torch.tensor([i for i in range(self.model.num_classes)])
