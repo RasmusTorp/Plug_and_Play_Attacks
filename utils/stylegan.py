@@ -62,7 +62,7 @@ def create_image(w,
         imgs = []
         for i in range(math.ceil(w_expanded.shape[0] / batch_size)):
             w_batch = w_expanded[i * batch_size:(i + 1) * batch_size]
-            imgs_generated = generator(w_batch,
+            imgs_generated = generator(ws=w_batch,
                                        noise_mode='const',
                                        force_fp32=True)
             imgs.append(imgs_generated.cpu())
