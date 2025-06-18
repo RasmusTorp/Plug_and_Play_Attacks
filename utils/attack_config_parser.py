@@ -125,26 +125,37 @@ class AttackConfigParser:
         targets = None
         target_classes = attack_config['targets']
         num_candidates = self._config['candidates']['num_candidates']
+        
+        # List of targets
         if type(target_classes) is list:
             targets = torch.tensor(target_classes)
             targets = torch.repeat_interleave(targets, num_candidates)
-        elif isinstance(target_classes, str) and 'FS-' in target_classes: # ex 'FS-75', you would take a random 37 men and 38 women using FaceScrub indices
-            #! only works with FaceScrub, maybe add assert statement?
-            num_target_classes = int(target_classes.split('-')[-1])
-            num_men = num_target_classes // 2
-            num_women = num_target_classes - num_men
-            random.seed(self._config['seed'])
-            men_idxs = random.sample(range(0, 264), num_men)
-            women_idxs = random.sample(range(265, 529), num_women)
-            targets = torch.tensor(men_idxs + women_idxs)
-            # print(f"Targets for {target_classes}: {targets}")
-            targets = torch.repeat_interleave(targets, num_candidates)
+        
+        # 'all' attacks all targets
         elif target_classes == 'all':
             targets = torch.tensor([i for i in range(self.model.num_classes)])
             targets = torch.repeat_interleave(targets, num_candidates)
+        
+        # Integer randomly samples targets of the amount
         elif type(target_classes) == int:
-            targets = torch.full(size=(num_candidates, ),
-                                 fill_value=target_classes)
+            random.seed(self._config['seed'])
+            num_target_classes = target_classes
+            
+            if self.dataset == 'FaceScrub':
+                num_men = num_target_classes // 2
+                num_women = num_target_classes - num_men
+                random.seed(self._config['seed'])
+                men_idxs = random.sample(range(0, 265), num_men)
+                women_idxs = random.sample(range(265, 530), num_women)
+                
+                idxs = men_idxs + women_idxs
+            
+            else:
+                idxs = random.sample(range(0, self.model.num_classes), num_men)
+            
+            targets = torch.tensor(idxs)
+            targets = torch.repeat_interleave(targets, num_candidates)
+            
         else:
             raise Exception(
                 f' Please specify a target class or state a target vector.')
