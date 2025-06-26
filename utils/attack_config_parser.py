@@ -151,7 +151,7 @@ class AttackConfigParser:
                 idxs = men_idxs + women_idxs
             
             else:
-                idxs = random.sample(range(0, self.model.num_classes), num_men)
+                idxs = random.sample(range(0, self.model.num_classes), num_target_classes)
             
             targets = torch.tensor(idxs)
             targets = torch.repeat_interleave(targets, num_candidates)
