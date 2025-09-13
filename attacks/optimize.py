@@ -16,6 +16,9 @@ class Optimization():
         self.num_ws = num_ws
         self.clip = config.attack['clip']
 
+        #! for avg conf tracking
+        self.conf_dict = {} # conf_dict[class] = [list of average target confidences for that class during optimization]
+
     def optimize(self, w_batch, targets_batch, num_epochs):
         # Initialize attack
         optimizer = self.config.create_optimizer(params=[w_batch.requires_grad_()])
@@ -66,6 +69,14 @@ class Optimization():
                         f'iteration {i}: \t total_loss={loss:.4f} \t target_loss={target_loss:.4f} \t',
                         f'discriminator_loss={discriminator_loss:.4f} \t mean_conf={mean_conf:.4f}'
                     )
+
+                if i == num_epochs - 1: #! calculate AvgTargetConf
+                    for curr_target in set(targets_batch.cpu().tolist()):
+                        if curr_target not in self.conf_dict:
+                            self.conf_dict[curr_target] = []
+                        target_indices = (targets_batch == curr_target).nonzero(as_tuple=True)[0]
+                        curr_target_mean_conf = confidences[target_indices].mean().item()
+                        self.conf_dict[curr_target].append(curr_target_mean_conf)
 
         return w_batch.detach()
 
