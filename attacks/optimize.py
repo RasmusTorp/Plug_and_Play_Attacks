@@ -16,6 +16,14 @@ class Optimization():
         self.num_ws = num_ws
         self.clip = config.attack['clip']
 
+        attack_loss_function = self.config.attack.get('attack_loss_function', 'poincare')
+        if attack_loss_function == 'poincare':
+            self.attack_loss = poincare_loss
+        elif attack_loss_function == 'cross_entropy':
+            self.attack_loss = nn.CrossEntropyLoss()
+        elif attack_loss_function == 'logit_loss':
+            self.attack_loss = None #! TODO
+
         #! for avg conf tracking
         self.conf_dict = {} # conf_dict[class] = [list of average target confidences for that class during optimization]
 
@@ -42,10 +50,13 @@ class Optimization():
             if self.transformations:
                 imgs = self.transformations(imgs)
 
-            # Compute target loss
+            # Compute outputs
             outputs = self.target(imgs)
-            target_loss = poincare_loss(
-                outputs, targets_batch).mean()
+
+            # Compute target loss
+            target_loss = self.attack_loss(
+                    outputs, targets_batch).mean() # outputs: (bsz, num_classes), targets_batch: (bsz,)
+
 
             # combine losses and compute gradients
             optimizer.zero_grad()
