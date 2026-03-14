@@ -1,7 +1,10 @@
 import math
+import os
 import numpy as np
 import torch
 import torch.nn as nn
+import torchvision
+import torchvision.transforms.functional as TF
 
 from Plug_and_Play_Attacks.losses.poincare import poincare_loss
 
@@ -32,10 +35,20 @@ class Optimization():
         optimizer = self.config.create_optimizer(params=[w_batch.requires_grad_()])
         scheduler = self.config.create_lr_scheduler(optimizer)
 
+        gif_folder = 'gifs'
+        gif_save_freq = 1
+        
+        if gif_folder:
+            os.makedirs(gif_folder, exist_ok=True)
+
         # Start optimization
         for i in range(num_epochs):
             # synthesize imagesnd preprocess images
             imgs = self.synthesize(w_batch, num_ws=self.num_ws)
+
+            if gif_folder and (i % gif_save_freq == 0):
+                with torch.no_grad():
+                    self._save_gif_frame(imgs, targets_batch, gif_folder, i)
 
             # compute discriminator loss
             if self.discriminator_weight > 0:
@@ -109,6 +122,19 @@ class Optimization():
         imgs = torch.where(imgs > upper_limit, upper_limit, imgs)
         imgs = torch.where(imgs < lower_limit, lower_limit, imgs)
         return imgs
+
+    def _save_gif_frame(self, imgs, targets_batch, folder, iteration, resize=256):
+        unique_targets = sorted(set(targets_batch.cpu().tolist()))
+        cols = []
+        for t in unique_targets:
+            idx = (targets_batch == t).nonzero(as_tuple=True)[0][0]
+            img = imgs[idx].detach().cpu()
+            img = (img * 0.5 + 128 / 255).clamp(0, 1)
+            img = TF.resize(img, resize, antialias=True)
+            cols.append(img)
+        frame = torch.cat(cols, dim=2)
+        path = os.path.join(folder, f'frame_{iteration:05d}.png')
+        torchvision.utils.save_image(frame, path)
 
     def compute_discriminator_loss(self, imgs):
         discriminator_logits = self.discriminator(imgs, None)
