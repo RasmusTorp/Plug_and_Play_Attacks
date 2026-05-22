@@ -108,9 +108,10 @@ class DistanceEvaluation():
             distances = torch.cdist(attack_embeddings, target_embeddings,
                                     p=2).cpu()
             distances = distances**2
-            distances, _ = torch.min(distances, dim=1)
-            smallest_distances.append(distances.cpu())
+            distances, _ = torch.min(distances, dim=1) # one distance per attack sample in this class
+            smallest_distances.append(distances.cpu()) # add to all-class list of attack samples
             mean_distances_list.append([target, distances.cpu().mean().item()])
+            import pdb; pdb.set_trace()
 
             if rtpt:
                 rtpt.step(
@@ -118,7 +119,7 @@ class DistanceEvaluation():
                     f'Distance Evaluation step {step} of {len(target_values)}')
 
         smallest_distances = torch.cat(smallest_distances, dim=0)
-        return smallest_distances.mean(), mean_distances_list
+        return smallest_distances.mean(), mean_distances_list # overall mean of min distances, per-class means of min distances
 
     def find_closest_training_sample(self, imgs, targets, batch_size=64):
         self.model.eval()

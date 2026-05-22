@@ -24,7 +24,7 @@ class Optimization():
         elif attack_loss_function == 'logit_loss':
             self.attack_loss = None #! TODO
 
-        #! for avg conf tracking
+        #! for avg target model confidence tracking
         self.conf_dict = {} # conf_dict[class] = [list of average target confidences for that class during optimization]
 
     def optimize(self, w_batch, targets_batch, num_epochs):
