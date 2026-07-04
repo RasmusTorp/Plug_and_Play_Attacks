@@ -111,7 +111,6 @@ class DistanceEvaluation():
             distances, _ = torch.min(distances, dim=1) # one distance per attack sample in this class
             smallest_distances.append(distances.cpu()) # add to all-class list of attack samples
             mean_distances_list.append([target, distances.cpu().mean().item()])
-            import pdb; pdb.set_trace()
 
             if rtpt:
                 rtpt.step(

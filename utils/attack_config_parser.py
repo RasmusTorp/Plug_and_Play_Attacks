@@ -70,7 +70,7 @@ class AttackConfigParser:
         for optimizer_type, args in optimizer_config.items():
             if not hasattr(optim, optimizer_type):
                 raise Exception(
-                    f'{optimizer_type} is no valid optimizer. Please write the type exactly as the PyTorch class'
+                    f'{optimizer_type} is not a valid optimizer. Please write the type exactly as the PyTorch class'
                 )
 
             optimizer_class = getattr(optim, optimizer_type)
@@ -86,7 +86,7 @@ class AttackConfigParser:
         for scheduler_type, args in scheduler_config.items():
             if not hasattr(optim.lr_scheduler, scheduler_type):
                 raise Exception(
-                    f'{scheduler_type} is no valid learning rate scheduler. Please write the type exactly as the PyTorch class.'
+                    f'{scheduler_type} is not a valid learning rate scheduler. Please write the type exactly as the PyTorch class.'
                 )
 
             scheduler_class = getattr(optim.lr_scheduler, scheduler_type)
@@ -189,7 +189,7 @@ class AttackConfigParser:
             for transform, args in transformations.items():
                 if not hasattr(T, transform):
                     raise Exception(
-                        f'{transform} is no valid transformation. Please write the type exactly as the Torchvision class'
+                        f'{transform} is not a valid transformation. Please write the type exactly as the Torchvision class'
                     )
                 transformation_class = getattr(T, transform)
                 transformation_list.append(transformation_class(**args))
