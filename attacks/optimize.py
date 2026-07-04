@@ -5,6 +5,10 @@ import torch.nn as nn
 
 from Plug_and_Play_Attacks.losses.poincare import poincare_loss
 
+#! BEGIN alignment score addition (see model_inversion/metrics/mi_gradient_alignment.py) - safe to delete this import + all blocks tagged "alignment score addition" to revert
+from model_inversion.metrics.mi_gradient_alignment import compute_gradient_alignment_score
+#! END alignment score addition
+
 class Optimization():
     def __init__(self, target_model, synthesis, discriminator, transformations, num_ws, config):
         self.synthesis = synthesis
@@ -27,7 +31,27 @@ class Optimization():
         #! for avg target model confidence tracking
         self.conf_dict = {} # conf_dict[class] = [list of average target confidences for that class during optimization]
 
+        #! for per-iteration target model confidence tracking (mirrors stdout logging)
+        self.iter_conf_log = [] # list of [batch_idx, iteration, target_classes, mean_conf]
+        self.batch_idx = -1
+
+        #! BEGIN alignment score addition - safe to delete to revert
+        alignment_score_config = self.config.attack.get('alignment_score', {})
+        self.compute_alignment_score = alignment_score_config.get('compute', False)
+        self.alignment_score_every = alignment_score_config.get('every', 10)
+        self.alignment_score_chunk_size = alignment_score_config.get('chunk_size', 100)
+        self.alignment_score_max_samples = alignment_score_config.get('max_samples', None)
+        self.alignment_log = [] # list of [batch_idx, iteration, target_classes, mean_alignment_score]
+
+        # raw (w, grad_x) pairs needed to compute the alignment score post-hoc, see
+        # model_inversion/metrics/mi_gradient_alignment.compute_alignment_scores_from_raw_log.
+        # Collected unconditionally (independent of compute_alignment_score) at the same cadence.
+        self.alignment_raw_log = [] # list of dicts: {batch_idx, iteration, target_classes, w, grad_x}
+        #! END alignment score addition
+
     def optimize(self, w_batch, targets_batch, num_epochs):
+        self.batch_idx += 1
+        target_classes = sorted(set(targets_batch.cpu().tolist())) # logged alongside batch_idx/iteration below
         # Initialize attack
         optimizer = self.config.create_optimizer(params=[w_batch.requires_grad_()])
         scheduler = self.config.create_lr_scheduler(optimizer)
@@ -61,7 +85,31 @@ class Optimization():
             # combine losses and compute gradients
             optimizer.zero_grad()
             loss = target_loss + discriminator_loss * self.discriminator_weight
+
+            #! BEGIN alignment score addition - safe to delete to revert
+            # raw data for post-hoc scoring is always collected at this cadence; the in-loop
+            # score itself (self._log_alignment_score) is only computed if explicitly enabled
+            log_alignment_iter = (i + 1) % self.alignment_score_every == 0 or i == 0
+            if log_alignment_iter:
+                imgs.retain_grad()
+            #! END alignment score addition
+
             loss.backward()
+
+            #! BEGIN alignment score addition - safe to delete to revert
+            if log_alignment_iter:
+                grad_x = imgs.grad.detach()
+                self.alignment_raw_log.append({
+                    'batch_idx': self.batch_idx,
+                    'iteration': i,
+                    'target_classes': target_classes,
+                    'w': w_batch.detach().cpu(),
+                    'grad_x': grad_x.cpu(),
+                })
+                if self.compute_alignment_score:
+                    self._log_alignment_score(i, target_classes, w_batch, grad_x)
+            #! END alignment score addition
+
             optimizer.step()
 
             if scheduler:
@@ -80,6 +128,7 @@ class Optimization():
                         f'iteration {i}: \t total_loss={loss:.4f} \t target_loss={target_loss:.4f} \t',
                         f'discriminator_loss={discriminator_loss:.4f} \t mean_conf={mean_conf:.4f}'
                     )
+                    self.iter_conf_log.append([self.batch_idx, i, target_classes, mean_conf.item()])
 
                 if i == num_epochs - 1: #! calculate AvgTargetConf
                     for curr_target in set(targets_batch.cpu().tolist()):
@@ -90,6 +139,20 @@ class Optimization():
                         self.conf_dict[curr_target].append(curr_target_mean_conf)
 
         return w_batch.detach()
+
+    #! BEGIN alignment score addition - safe to delete this method to revert
+    def _log_alignment_score(self, iteration, target_classes, w_batch, grad_x):
+        scores = compute_gradient_alignment_score(
+            self.synthesis, w_batch, grad_x, self.num_ws,
+            transformations=self.transformations, chunk_size=self.alignment_score_chunk_size,
+            max_samples=self.alignment_score_max_samples,
+        )
+        mean_score = scores.mean().item()
+        for sample_idx, score in enumerate(scores.tolist()):
+            self.alignment_log.append([self.batch_idx, iteration, target_classes, sample_idx, score])
+        if torch.cuda.current_device() == 0:
+            print(f'iteration {iteration}: \t alignment_score={mean_score:.4f}')
+    #! END alignment score addition
 
     def synthesize(self, w, num_ws):
         if w.shape[1] == 1:
