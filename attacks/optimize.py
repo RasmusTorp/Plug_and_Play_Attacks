@@ -6,7 +6,7 @@ import torch.nn as nn
 from Plug_and_Play_Attacks.losses.poincare import poincare_loss
 
 #! BEGIN alignment score addition (see model_inversion/metrics/mi_gradient_alignment.py) - safe to delete this import + all blocks tagged "alignment score addition" to revert
-from model_inversion.metrics.mi_gradient_alignment import compute_gradient_alignment_score
+from model_inversion.metrics.mi_gradient_alignment import compute_gradient_alignment_score, make_det_transformations
 #! END alignment score addition
 
 class Optimization():
@@ -39,13 +39,24 @@ class Optimization():
         alignment_score_config = self.config.attack.get('alignment_score', {})
         self.compute_alignment_score = alignment_score_config.get('compute', False)
         self.alignment_score_every = alignment_score_config.get('every', 10)
-        self.alignment_score_chunk_size = alignment_score_config.get('chunk_size', 100)
+        self.alignment_score_chunk_size = alignment_score_config.get('chunk_size', 40)
         self.alignment_score_max_samples = alignment_score_config.get('max_samples', None)
         self.alignment_log = [] # list of [batch_idx, iteration, target_classes, mean_alignment_score]
+
+        # Deterministic transforms: stochastic augmentations (RandomResizedCrop, ColorJitter, etc.)
+        # stripped out so that both grad_x and the Jacobian are computed consistently.
+        self.det_transformations = make_det_transformations(transformations)
+        if transformations is not None:
+            _all = transformations.transforms if hasattr(transformations, 'transforms') else [transformations]
+            _kept_ids = set(id(t) for t in (self.det_transformations.transforms if hasattr(self.det_transformations, 'transforms') else ([self.det_transformations] if self.det_transformations else [])))
+            _removed = [type(t).__name__ for t in _all if id(t) not in _kept_ids]
+            if _removed:
+                print(f"[alignment score] det_transformations: removed stochastic {_removed}")
 
         # raw (w, grad_x) pairs needed to compute the alignment score post-hoc, see
         # model_inversion/metrics/mi_gradient_alignment.compute_alignment_scores_from_raw_log.
         # Collected unconditionally (independent of compute_alignment_score) at the same cadence.
+        # grad_x is computed via a separate deterministic forward pass (det_transformations).
         self.alignment_raw_log = [] # list of dicts: {batch_idx, iteration, target_classes, w, grad_x}
         #! END alignment score addition
 
@@ -86,19 +97,23 @@ class Optimization():
             optimizer.zero_grad()
             loss = target_loss + discriminator_loss * self.discriminator_weight
 
-            #! BEGIN alignment score addition - safe to delete to revert
-            # raw data for post-hoc scoring is always collected at this cadence; the in-loop
-            # score itself (self._log_alignment_score) is only computed if explicitly enabled
-            log_alignment_iter = (i + 1) % self.alignment_score_every == 0 or i == 0
-            if log_alignment_iter:
-                imgs.retain_grad()
-            #! END alignment score addition
-
             loss.backward()
 
             #! BEGIN alignment score addition - safe to delete to revert
+            # grad_x is computed via a separate deterministic forward pass so that it is
+            # consistent with the Jacobian built inside flattened_g (both use det_transformations).
+            log_alignment_iter = (i + 1) % self.alignment_score_every == 0 or i == 0
             if log_alignment_iter:
-                grad_x = imgs.grad.detach()
+                with torch.no_grad():
+                    det_imgs = self.synthesize(w_batch, num_ws=self.num_ws)
+                    if self.clip:
+                        det_imgs = self.clip_images(det_imgs)
+                    if self.det_transformations:
+                        det_imgs = self.det_transformations(det_imgs)
+                det_imgs = det_imgs.detach().requires_grad_(True)
+                det_loss = self.attack_loss(self.target(det_imgs), targets_batch).mean()
+                det_loss.backward()
+                grad_x = det_imgs.grad.detach()
                 self.alignment_raw_log.append({
                     'batch_idx': self.batch_idx,
                     'iteration': i,
@@ -144,7 +159,7 @@ class Optimization():
     def _log_alignment_score(self, iteration, target_classes, w_batch, grad_x):
         scores = compute_gradient_alignment_score(
             self.synthesis, w_batch, grad_x, self.num_ws,
-            transformations=self.transformations, chunk_size=self.alignment_score_chunk_size,
+            transformations=self.det_transformations, chunk_size=self.alignment_score_chunk_size,
             max_samples=self.alignment_score_max_samples,
         )
         mean_score = scores.mean().item()

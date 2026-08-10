@@ -183,21 +183,31 @@ class AttackConfigParser:
         return config
 
     def create_attack_transformations(self):
-        transformation_list = []
-        if 'transformations' in self._config['attack']:
-            transformations = self._config['attack']['transformations']
-            for transform, args in transformations.items():
-                if not hasattr(T, transform):
-                    raise Exception(
-                        f'{transform} is not a valid transformation. Please write the type exactly as the Torchvision class'
-                    )
-                transformation_class = getattr(T, transform)
-                transformation_list.append(transformation_class(**args))
-        if len(transformation_list) > 0:
-            attack_transformations = T.Compose(transformation_list)
-            return attack_transformations
+        if 'transformations' not in self._config['attack']:
+            return None
 
-        return None
+        transformations = self._config['attack']['transformations']
+
+        # Build in canonical order so that W&B config round-trips (which may reorder dict keys)
+        # do not change the transform pipeline. Transforms outside this list are appended after
+        # in their original order for forward compatibility.
+        _CANONICAL_ORDER = ['CenterCrop', 'Resize', 'RandomResizedCrop']
+
+        transformation_list = []
+        for transform_name in _CANONICAL_ORDER:
+            if transform_name in transformations:
+                transformation_list.append(getattr(T, transform_name)(**transformations[transform_name]))
+
+        for transform, args in transformations.items():
+            if transform in _CANONICAL_ORDER:
+                continue
+            if not hasattr(T, transform):
+                raise Exception(
+                    f'{transform} is not a valid transformation. Please write the type exactly as the Torchvision class'
+                )
+            transformation_list.append(getattr(T, transform)(**args))
+
+        return T.Compose(transformation_list) if transformation_list else None
 
     @property
     def candidates(self):
