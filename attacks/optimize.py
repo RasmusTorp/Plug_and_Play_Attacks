@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from Plug_and_Play_Attacks.losses.poincare import poincare_loss
+from Plug_and_Play_Attacks.losses.label_smoothing import CrossEntropyLoss as LabelSmoothingCrossEntropyLoss
 
 #! BEGIN alignment score addition (see model_inversion/metrics/mi_gradient_alignment.py) - safe to delete this import + all blocks tagged "alignment score addition" to revert
 from model_inversion.metrics.mi_gradient_alignment import compute_gradient_alignment_score, make_det_transformations
@@ -25,6 +26,11 @@ class Optimization():
             self.attack_loss = poincare_loss
         elif attack_loss_function == 'cross_entropy':
             self.attack_loss = nn.CrossEntropyLoss()
+        elif attack_loss_function == 'negative_label_smoothing':
+            # Negative label smoothing sharpens the target class further than
+            # standard cross entropy, to (hopefully) counteract label-smoothing-based defenses.
+            label_smoothing_factor = self.config.attack.get('label_smoothing_factor', -0.1)
+            self.attack_loss = LabelSmoothingCrossEntropyLoss(label_smoothing=label_smoothing_factor)
         elif attack_loss_function == 'logit_loss':
             self.attack_loss = None #! TODO
 
@@ -32,7 +38,7 @@ class Optimization():
         self.conf_dict = {} # conf_dict[class] = [list of average target confidences for that class during optimization]
 
         #! for per-iteration target model confidence tracking (mirrors stdout logging)
-        self.iter_conf_log = [] # list of [batch_idx, iteration, target_classes, mean_conf]
+        self.iter_conf_log = [] # list of [batch_idx, iteration, target_classes, mean_conf, grad_cosine_sim]
         self.batch_idx = -1
 
         #! BEGIN alignment score addition - safe to delete to revert
@@ -67,6 +73,12 @@ class Optimization():
         optimizer = self.config.create_optimizer(params=[w_batch.requires_grad_()])
         scheduler = self.config.create_lr_scheduler(optimizer)
 
+        #! BEGIN successive-gradient cosine similarity addition - safe to delete this block + the two tagged blocks below to revert
+        # gradient of the loss w.r.t. the (stochastically transformed) input image from the previous
+        # iteration, used to track how much the attack gradient direction shifts iteration to iteration
+        prev_grad_x = None
+        #! END successive-gradient cosine similarity addition
+
         # Start optimization
         for i in range(num_epochs):
             # synthesize imagesnd preprocess images
@@ -85,6 +97,14 @@ class Optimization():
             if self.transformations:
                 imgs = self.transformations(imgs)
 
+            #! BEGIN successive-gradient cosine similarity addition - safe to delete to revert
+            # retain grad on the actual (stochastically transformed) model input so we can read
+            # d(loss)/d(imgs) after backward(), without touching the alignment score's separate
+            # deterministic gradient computation below
+            if self.config.log_progress:
+                imgs.retain_grad()
+            #! END successive-gradient cosine similarity addition
+
             # Compute outputs
             outputs = self.target(imgs)
 
@@ -98,6 +118,21 @@ class Optimization():
             loss = target_loss + discriminator_loss * self.discriminator_weight
 
             loss.backward()
+
+            #! BEGIN successive-gradient cosine similarity addition - safe to delete to revert
+            # cosine similarity (averaged over the batch) between this iteration's and the previous
+            # iteration's gradient of the loss w.r.t. the transformed input image; None on the first
+            # iteration, since there is no previous gradient to compare against
+            grad_cosine_sim = None
+            if self.config.log_progress:
+                grad_x_normal = imgs.grad.detach()
+                if prev_grad_x is not None:
+                    grad_curr_flat = grad_x_normal.reshape(grad_x_normal.shape[0], -1)
+                    grad_prev_flat = prev_grad_x.reshape(prev_grad_x.shape[0], -1)
+                    grad_cosine_sim = nn.functional.cosine_similarity(
+                        grad_curr_flat, grad_prev_flat, dim=1).mean().item()
+                prev_grad_x = grad_x_normal
+            #! END successive-gradient cosine similarity addition
 
             #! BEGIN alignment score addition - safe to delete to revert
             # grad_x is computed via a separate deterministic forward pass so that it is
@@ -143,7 +178,7 @@ class Optimization():
                         f'iteration {i}: \t total_loss={loss:.4f} \t target_loss={target_loss:.4f} \t',
                         f'discriminator_loss={discriminator_loss:.4f} \t mean_conf={mean_conf:.4f}'
                     )
-                    self.iter_conf_log.append([self.batch_idx, i, target_classes, mean_conf.item()])
+                    self.iter_conf_log.append([self.batch_idx, i, target_classes, mean_conf.item(), grad_cosine_sim])
 
                 if i == num_epochs - 1: #! calculate AvgTargetConf
                     for curr_target in set(targets_batch.cpu().tolist()):
